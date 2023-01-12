@@ -12,6 +12,7 @@ client.on('ready', () => {
 })
 
 client.on('message', (message) => {
+  // Let players join with command
   if (message.content === '/join') {
     console.log(message.content)
     if (!gameStarted) {
@@ -24,6 +25,7 @@ client.on('message', (message) => {
           )
         }
       } else {
+        // No more than 5 players
         message.channel.send('The game is full, please try again later.')
       }
     } else {
@@ -33,6 +35,7 @@ client.on('message', (message) => {
     }
   }
 
+  // Start game - only Admin can start
   if (message.content === '/start') {
     if (message.member.hasPermission('ADMINISTRATOR')) {
       if (players.size >= 5 && !gameStarted) {
@@ -75,6 +78,7 @@ client.on('message', (message) => {
     }
   }
 
+  // Leave the game if needed
   if (message.content === '/leave') {
     if (players.has(message.author)) {
       players.delete(message.author)
