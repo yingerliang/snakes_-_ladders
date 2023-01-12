@@ -1,27 +1,33 @@
 const { Client, GatewayIntentBits } = require('discord.js')
-const client = new Client({ intents: [GatewayIntentBits.Guilds] })
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+  ],
+})
 const dotenv = require('dotenv')
 dotenv.config()
 
 let gameStarted = false
 let round = 0
 let currentPlayer = null
+const players = new Map() //map to store players position
 
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`)
 })
 
-client.on('message', (message) => {
+client.on('messageCreate', (message) => {
   // Let players join with command
   if (message.content === '/join') {
-    console.log(message.content)
     if (!gameStarted) {
-      if (players.size < 5) {
+      if (players.size <= 5) {
         players.set(message.author, 0) // Setting the initial position
         message.channel.send(`${message.author.username} has joined the game!`)
-        if (players.size == 5) {
+        if (players.size == 1) {
           message.channel.send(
-            `The game is ready to start! please use !start to start the game!`,
+            `The game is ready to start! please use /start to start the game!`,
           )
         }
       } else {
@@ -37,43 +43,44 @@ client.on('message', (message) => {
 
   // Start game - only Admin can start
   if (message.content === '/start') {
-    if (message.member.hasPermission('ADMINISTRATOR')) {
-      if (players.size >= 5 && !gameStarted) {
-        gameStarted = true
-        message.channel.send("The game has started, let's roll the dices!")
+    if (!gameStarted) {
+      if (message.member.permissions.has('ADMINISTRATOR')) {
+        if (players.size >= 1 && !gameStarted) {
+          gameStarted = true
+          message.channel.send("The game has started, let's roll the dices!")
+        } else {
+          message.channel.send(
+            'The game has already started or there are not enough players, please wait for the next round.',
+          )
+        }
       } else {
         message.channel.send(
-          'The game has already started or there are not enough players, please wait for the next round.',
+          'You do not have the permission to start the game.',
         )
       }
-    } else {
-      message.channel.send('You do not have the permission to start the game.')
     }
   }
 
   if (message.content === '/roll' && gameStarted) {
     if (round === 0 || message.author === currentPlayer) {
+      let maxRoll = 0
       let roll = Math.floor(Math.random() * 6) + 1
       message.channel.send(`${message.author.username} rolls... ${roll}!`)
+      // Find highest roll
+      if (roll > maxRoll) {
+        maxRoll = roll
+        currentPlayer = message.author
+      }
       round += 1
-      currentPlayer = message.author
       if (round === players.size) {
         round = 0
-        let maxRoll = 0
-        // Find the highest roll
-        for (let [player, roll] of players) {
-          if (roll > maxRoll) {
-            maxRoll = roll
-            currentPlayer = player
-          }
-        }
         message.channel.send(
           `${currentPlayer.username} has the highest roll ${maxRoll} and will go first`,
         )
       }
     } else {
       message.channel.send(
-        `It's ${currentPlayer.username} turn to roll, please wait your turn`,
+        `It's ${currentPlayer.username} turn to roll, please wait for your turn`,
       )
     }
   }
