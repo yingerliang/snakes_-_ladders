@@ -1,8 +1,11 @@
 const { Client, GatewayIntentBits } = require('discord.js')
-const dotenv = require('dotenv')
-
-dotenv.config()
 const client = new Client({ intents: [GatewayIntentBits.Guilds] })
+const dotenv = require('dotenv')
+dotenv.config()
+
+let gameStarted = false
+let round = 0
+let currentPlayer = null
 
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`)
@@ -10,6 +13,7 @@ client.on('ready', () => {
 
 client.on('message', (message) => {
   if (message.content === '/join') {
+    console.log(message.content)
     if (!gameStarted) {
       if (players.size < 5) {
         players.set(message.author, 0) // Setting the initial position
@@ -36,7 +40,7 @@ client.on('message', (message) => {
         message.channel.send("The game has started, let's roll the dices!")
       } else {
         message.channel.send(
-          'The game has already started or not enough players, please wait for the next round.',
+          'The game has already started or there are not enough players, please wait for the next round.',
         )
       }
     } else {
@@ -44,22 +48,29 @@ client.on('message', (message) => {
     }
   }
 
-  if (message.content === '/roll') {
-    if (gameStarted && players.has(message.author)) {
-      const roll = Math.floor(Math.random() * 6) + 1
-      let newPosition = players.get(message.author) + roll
-      if (newPosition > 62) newPosition = 62
-      players.set(message.author, newPosition)
-      message.channel.send(
-        `${message.author.username} rolls... ${roll}, and moved to position ${newPosition}!`,
-      )
-    } else if (!gameStarted) {
-      message.channel.send(
-        "The game hasn't started yet, please wait for the admin to start the game.",
-      )
+  if (message.content === '/roll' && gameStarted) {
+    if (round === 0 || message.author === currentPlayer) {
+      let roll = Math.floor(Math.random() * 6) + 1
+      message.channel.send(`${message.author.username} rolls... ${roll}!`)
+      round += 1
+      currentPlayer = message.author
+      if (round === players.size) {
+        round = 0
+        let maxRoll = 0
+        // Find the highest roll
+        for (let [player, roll] of players) {
+          if (roll > maxRoll) {
+            maxRoll = roll
+            currentPlayer = player
+          }
+        }
+        message.channel.send(
+          `${currentPlayer.username} has the highest roll ${maxRoll} and will go first`,
+        )
+      }
     } else {
       message.channel.send(
-        "You are not in the game! Please use '!join' to join the game!",
+        `It's ${currentPlayer.username} turn to roll, please wait your turn`,
       )
     }
   }
