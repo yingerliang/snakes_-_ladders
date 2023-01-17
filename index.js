@@ -12,6 +12,9 @@ dotenv.config()
 let gameStarted = false
 let round = 0
 let currentPlayer = null
+let maxRoll = 0
+let rolling = false
+let firstRound = true
 const players = new Map() //map to store players position
 
 client.on('ready', () => {
@@ -63,25 +66,60 @@ client.on('messageCreate', (message) => {
 
   if (message.content === '/roll' && gameStarted) {
     if (round === 0 || message.author === currentPlayer) {
-      let maxRoll = 0
-      let roll = Math.floor(Math.random() * 6) + 1
-      message.channel.send(`${message.author.username} rolls... ${roll}!`)
-      // Find highest roll
-      if (roll > maxRoll) {
-        maxRoll = roll
-        currentPlayer = message.author
-      }
-      round += 1
-      if (round === players.size) {
-        round = 0
+      if (rolling) {
+        let rolls = [
+          Math.floor(Math.random() * 6) + 1,
+          Math.floor(Math.random() * 6) + 1,
+        ]
+        let totalRoll = rolls.reduce((a, b) => a + b)
+        players.set(message.author, players.get(message.author) + totalRoll)
         message.channel.send(
-          `${currentPlayer.username} has the highest roll ${maxRoll} and will go first`,
+          `${message.author.username} rolls... ${rolls[0]} and ${rolls[1]} = ${totalRoll}!`,
         )
+        message.channel.send(
+          `${message.author.username} is now at position ${players.get(
+            message.author,
+          )}`,
+        )
+        if (players.get(message.author) >= 62) {
+          message.channel.send(
+            `Congratulations ${message.author.username}! You've won the game!`,
+          )
+          gameStarted = false
+          players.clear()
+          rolling = false
+          round = 0
+          firstRound = true
+        }
+        round += 1
+        if (round === players.size) {
+          round = 0
+        }
+      } else {
+        let rolls = [
+          Math.floor(Math.random() * 6) + 1,
+          Math.floor(Math.random() * 6) + 1,
+        ]
+        let totalRoll = rolls.reduce((a, b) => a + b)
+        message.channel.send(
+          `${message.author.username} rolls... ${rolls[0]} and ${rolls[1]} = ${totalRoll}!`,
+        )
+        if (totalRoll > maxRoll) {
+          maxRoll = totalRoll
+          currentPlayer = message.author
+          if (firstRound) {
+            message.channel.send(
+              `${currentPlayer.username} has the highest roll ${maxRoll} and will roll again`,
+            )
+            firstRound = false
+          }
+          rolling = true
+        } else {
+          message.channel.send(`It's not your turn ${message.author.username}`)
+        }
       }
     } else {
-      message.channel.send(
-        `It's ${currentPlayer.username} turn to roll, please wait for your turn`,
-      )
+      message.channel.send(`It's not your turn ${message.author.username}`)
     }
   }
 
