@@ -1,3 +1,7 @@
+const anatomyCard = require('./cards/anatomyCard')
+const competenceCard = require('./cards/competenceCard')
+const relatednessCard = require('./cards/relatednessCard')
+
 const { Client, GatewayIntentBits } = require('discord.js')
 const client = new Client({
   intents: [
@@ -64,8 +68,10 @@ client.on('messageCreate', (message) => {
     }
   }
 
+  // Roll Command
   if (message.content === '/roll' && gameStarted) {
     if (round === 0 || message.author === currentPlayer) {
+      // Roll Double Dice
       if (rolling) {
         let rolls = [
           Math.floor(Math.random() * 6) + 1,
@@ -73,9 +79,11 @@ client.on('messageCreate', (message) => {
         ]
         let totalRoll = rolls.reduce((a, b) => a + b)
         players.set(message.author, players.get(message.author) + totalRoll)
+        // Player Roll
         message.channel.send(
-          `${message.author.username} rolls... ${rolls[0]} and ${rolls[1]} = ${totalRoll}!`,
+          `${message.author.username} rolls... ${rolls[0]} + ${rolls[1]} = ${totalRoll}!`,
         )
+        // Update player position
         message.channel.send(
           `${message.author.username} is now at position ${players.get(
             message.author,
@@ -91,6 +99,64 @@ client.on('messageCreate', (message) => {
           round = 0
           firstRound = true
         }
+
+        // Draw Anatomy Card
+        if (
+          players.get(message.author) === 3 ||
+          players.get(message.author) === 4 ||
+          players.get(message.author) === 9 ||
+          players.get(message.author) === 28 ||
+          players.get(message.author) === 33 ||
+          players.get(message.author) === 36 ||
+          players.get(message.author) === 58
+        ) {
+          let cardId = Math.floor(Math.random() * 3) + 1 // generate a random card ID between 1 and 3
+          message.channel.send(
+            `${message.author.username} drew an Autonomy card!`,
+          )
+          message.channel.send(
+            `Objective: ${anatomyCard.getAnatomyCard(cardId)}`,
+          )
+        }
+
+        // Draw Competence Card
+        if (
+          players.get(message.author) === 11 ||
+          players.get(message.author) === 15 ||
+          players.get(message.author) === 17 ||
+          players.get(message.author) === 39 ||
+          players.get(message.author) === 40 ||
+          players.get(message.author) === 43 ||
+          players.get(message.author) === 61
+        ) {
+          let cardId = Math.floor(Math.random() * 3) + 1 // generate a random card ID between 1 and 3
+          message.channel.send(
+            `${message.author.username} drew an Competence card!`,
+          )
+          message.channel.send(
+            `Task: ${competenceCard.getCompetenceCard(cardId)}`,
+          )
+        }
+
+        // Draw Relatedness Card
+        if (
+          players.get(message.author) === 22 ||
+          players.get(message.author) === 23 ||
+          players.get(message.author) === 27 ||
+          players.get(message.author) === 46 ||
+          players.get(message.author) === 50 ||
+          players.get(message.author) === 53 ||
+          players.get(message.author) === 62
+        ) {
+          let cardId = Math.floor(Math.random() * 3) + 1 // generate a random card ID between 1 and 3
+          message.channel.send(
+            `${message.author.username} drew an Relatedness card!`,
+          )
+          message.channel.send(
+            `Objective: ${relatednessCard.getRelatednessCard(cardId)}`,
+          )
+        }
+
         round += 1
         if (round === players.size) {
           round = 0
@@ -102,7 +168,7 @@ client.on('messageCreate', (message) => {
         ]
         let totalRoll = rolls.reduce((a, b) => a + b)
         message.channel.send(
-          `${message.author.username} rolls... ${rolls[0]} and ${rolls[1]} = ${totalRoll}!`,
+          `${message.author.username} rolls... ${rolls[0]} + ${rolls[1]} = ${totalRoll}!`,
         )
         if (totalRoll > maxRoll) {
           maxRoll = totalRoll
