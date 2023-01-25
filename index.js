@@ -21,6 +21,10 @@ let rolling = false
 let firstRound = true
 const players = new Map() //map to store players position
 
+let autonomyCompleted = false
+let relatednessCompleted = false
+let competenceCompleted = false
+
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`)
 })
@@ -68,7 +72,7 @@ client.on('messageCreate', (message) => {
     }
   }
 
-  // Roll Command
+  // Roll Dice Command
   if (message.content === '/roll' && gameStarted) {
     if (round === 0 || message.author === currentPlayer) {
       // Roll Double Dice
@@ -89,15 +93,108 @@ client.on('messageCreate', (message) => {
             message.author,
           )}`,
         )
-        if (players.get(message.author) >= 62) {
+        if (players.get(message.author) === 62) {
+          if (
+            !autonomyCompleted ||
+            !relatednessCompleted ||
+            !competenceCompleted
+          ) {
+            message.channel.send(
+              `${message.author.username} has not collected all the cards, going back to Week 1, Position 1.`,
+            )
+            players.set(message.author, 1)
+          } else {
+            message.channel.send(
+              `Congratulations ${message.author.username}! You've collected all the cards!`,
+            )
+            gameStarted = false
+            players.clear()
+            rolling = false
+            round = 0
+            firstRound = true
+            autonomyCompleted = false
+            relatednessCompleted = false
+            competenceCompleted = false
+          }
+        }
+
+        // Position 8 slides to Position 53
+        if (players.get(message.author) === 8) {
           message.channel.send(
-            `Congratulations ${message.author.username}! You've won the game!`,
+            `${message.author.username} has landed on position 8 and is now sliding down to position 53.`,
           )
-          gameStarted = false
-          players.clear()
-          rolling = false
-          round = 0
-          firstRound = true
+          players.set(message.author, 53)
+        }
+
+        // Position 25 climbs back to Position 11
+        if (players.get(message.author) === 25) {
+          message.channel.send(
+            `${message.author.username} has landed on position 8 and is now climbing up the ladder back to position 11.`,
+          )
+          players.set(message.author, 11)
+        }
+
+        // Position 21 climbs back to Position 16
+        if (players.get(message.author) === 21) {
+          message.channel.send(
+            `${message.author.username} has landed on position 21 and is taking 5 steps back to position 16.`,
+          )
+          players.set(message.author, 16)
+        }
+
+        // Position 37 flies to Position 44
+        if (players.get(message.author) === 37) {
+          message.channel.send(
+            `${message.author.username} has landed on position 37 and flies to position 44.`,
+          )
+          players.set(message.author, 44)
+        }
+
+        // Position 56 climbs back to Position 50
+        if (players.get(message.author) === 56) {
+          message.channel.send(
+            `${message.author.username} has landed on position 56 and had an extra long weekend back to position 50.`,
+          )
+          players.set(message.author, 50)
+        }
+
+        // Position 60 goes to Position 1
+        if (players.get(message.author) === 60) {
+          message.channel.send(
+            `${message.author.username} has landed on position 60 and is finished for the week. Go to position 1.`,
+          )
+          players.set(message.author, 1)
+        }
+
+        // Position 13 = Roll again
+        if (players.get(message.author) === 13) {
+          message.channel.send(
+            `${message.author.username} has landed on position 13 and will roll again.`,
+          )
+          let roll = Math.floor(Math.random() * 6) + 1
+          let newPosition = players.get(message.author) + roll
+          players.set(message.author, newPosition)
+          message.channel.send(
+            `${message.author.username} has rolled a ${roll} and landed on position ${newPosition}`,
+          )
+        }
+
+        // Position 32 = Skip next turn
+        let skipNextTurn = new Map()
+
+        if (players.get(message.author) === 32) {
+          message.channel.send(
+            `${message.author.username} has landed on position 32 and will skip their next turn.`,
+          )
+          skipNextTurn.set(message.author, true)
+        }
+
+        if (skipNextTurn.get(message.author)) {
+          message.channel.send(
+            `${message.author.username} has to skip this turn`,
+          )
+          skipNextTurn.set(message.author, false)
+          return
         }
 
         // Draw Anatomy Card
@@ -110,13 +207,14 @@ client.on('messageCreate', (message) => {
           players.get(message.author) === 36 ||
           players.get(message.author) === 58
         ) {
-          let cardId = Math.floor(Math.random() * 3) + 1 // generate a random card ID between 1 and 3
+          let cardId = Math.floor(Math.random() * 3) + 1 // change number depending on cards added
           message.channel.send(
             `${message.author.username} drew an Autonomy card!`,
           )
           message.channel.send(
             `Objective: ${anatomyCard.getAnatomyCard(cardId)}`,
           )
+          autonomyCompleted = true
         }
 
         // Draw Competence Card
@@ -129,13 +227,14 @@ client.on('messageCreate', (message) => {
           players.get(message.author) === 43 ||
           players.get(message.author) === 61
         ) {
-          let cardId = Math.floor(Math.random() * 3) + 1 // generate a random card ID between 1 and 3
+          let cardId = Math.floor(Math.random() * 3) + 1 // change number depending on cards added
           message.channel.send(
             `${message.author.username} drew an Competence card!`,
           )
           message.channel.send(
             `Task: ${competenceCard.getCompetenceCard(cardId)}`,
           )
+          competenceCompleted = true
         }
 
         // Draw Relatedness Card
@@ -148,12 +247,20 @@ client.on('messageCreate', (message) => {
           players.get(message.author) === 53 ||
           players.get(message.author) === 62
         ) {
-          let cardId = Math.floor(Math.random() * 3) + 1 // generate a random card ID between 1 and 3
+          let cardId = Math.floor(Math.random() * 3) + 1 // change number depending on cards added
           message.channel.send(
             `${message.author.username} drew an Relatedness card!`,
           )
           message.channel.send(
             `Objective: ${relatednessCard.getRelatednessCard(cardId)}`,
+          )
+          relatednessCompleted = true
+        }
+
+        // Send message when cards have been collected
+        if (autonomyCompleted && relatednessCompleted && competenceCompleted) {
+          message.channel.send(
+            `Congratulations ${message.author.username}! You've collected all the cards!`,
           )
         }
 
@@ -186,6 +293,49 @@ client.on('messageCreate', (message) => {
       }
     } else {
       message.channel.send(`It's not your turn ${message.author.username}`)
+    }
+  }
+
+  // Track cards collected
+  if (message.content === '/cards') {
+    let cards = []
+    if (autonomyCompleted) cards.push('Autonomy')
+    if (relatednessCompleted) cards.push('Relatedness')
+    if (competenceCompleted) cards.push('Competence')
+
+    if (cards.length > 0) {
+      message.channel.send(
+        `${message.author.username}, you've collected: ${cards.join(', ')}`,
+      )
+    } else {
+      message.channel.send(
+        `${message.author.username}, you haven't collected any cards yet.`,
+      )
+    }
+  }
+
+  // Skip card
+  if (message.content.startsWith('!skip')) {
+    let card = message.content.split(' ')[1]
+    if (card === 'autonomy') {
+      autonomyCompleted = true
+      message.channel.send(
+        `${message.author.username}, You have skipped the Autonomy card.`,
+      )
+    } else if (card === 'relatedness') {
+      relatednessCompleted = true
+      message.channel.send(
+        `${message.author.username}, You have skipped the Relatedness card.`,
+      )
+    } else if (card === 'competence') {
+      competenceCompleted = true
+      message.channel.send(
+        `${message.author.username}, You have skipped the Competence card.`,
+      )
+    } else {
+      message.channel.send(
+        `${message.author.username}, Invalid card name. Please use 'autonomy', 'relatedness' or 'competence'.`,
+      )
     }
   }
 
