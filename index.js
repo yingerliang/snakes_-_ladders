@@ -169,7 +169,7 @@ client.on('messageCreate', (message) => {
         // Position 13 = Roll again
         if (players.get(message.author) === 13) {
           message.channel.send(
-            `${message.author.username} has landed on position 13 and will roll again.`,
+            `${message.author.username} has landed on position 13 and gets to roll again!`,
           )
           let roll = Math.floor(Math.random() * 6) + 1
           let newPosition = players.get(message.author) + roll
@@ -315,7 +315,7 @@ client.on('messageCreate', (message) => {
   }
 
   // Skip card
-  if (message.content.startsWith('!skip')) {
+  if (message.content.startsWith('/skip')) {
     let card = message.content.split(' ')[1]
     if (card === 'autonomy') {
       autonomyCompleted = true
