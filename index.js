@@ -77,15 +77,13 @@ client.on('messageCreate', (message) => {
     if (round === 0 || message.author === currentPlayer) {
       // Roll Double Dice
       if (rolling) {
-        let rolls = [
-          Math.floor(Math.random() * 6) + 1,
-          Math.floor(Math.random() * 6) + 1,
-        ]
-        let totalRoll = rolls.reduce((a, b) => a + b)
+        let roll1 = Math.floor(Math.random() * 6) + 1
+        let roll2 = Math.floor(Math.random() * 6) + 1
+        let totalRoll = roll1 + roll2
         players.set(message.author, players.get(message.author) + totalRoll)
         // Player Roll
         message.channel.send(
-          `${message.author.username} rolls... ${rolls[0]} + ${rolls[1]} = ${totalRoll}!`,
+          `${message.author.username} rolls... ${roll1} + ${roll2} = ${totalRoll}!`,
         )
         // Update player position
         message.channel.send(
@@ -93,6 +91,8 @@ client.on('messageCreate', (message) => {
             message.author,
           )}`,
         )
+
+        // Check if players have collected all cards after reaching postion 62
         if (players.get(message.author) === 62) {
           if (
             !autonomyCompleted ||
@@ -211,9 +211,7 @@ client.on('messageCreate', (message) => {
           message.channel.send(
             `${message.author.username} drew an Autonomy card!`,
           )
-          message.channel.send(
-            `Objective: ${anatomyCard.getAnatomyCard(cardId)}`,
-          )
+          message.channel.send(`${anatomyCard.getAnatomyCard(cardId)}`)
           autonomyCompleted = true
         }
 
@@ -231,9 +229,7 @@ client.on('messageCreate', (message) => {
           message.channel.send(
             `${message.author.username} drew an Competence card!`,
           )
-          message.channel.send(
-            `Task: ${competenceCard.getCompetenceCard(cardId)}`,
-          )
+          message.channel.send(`${competenceCard.getCompetenceCard(cardId)}`)
           competenceCompleted = true
         }
 
@@ -251,9 +247,7 @@ client.on('messageCreate', (message) => {
           message.channel.send(
             `${message.author.username} drew an Relatedness card!`,
           )
-          message.channel.send(
-            `Objective: ${relatednessCard.getRelatednessCard(cardId)}`,
-          )
+          message.channel.send(`${relatednessCard.getRelatednessCard(cardId)}`)
           relatednessCompleted = true
         }
 
@@ -269,13 +263,12 @@ client.on('messageCreate', (message) => {
           round = 0
         }
       } else {
-        let rolls = [
-          Math.floor(Math.random() * 6) + 1,
-          Math.floor(Math.random() * 6) + 1,
-        ]
-        let totalRoll = rolls.reduce((a, b) => a + b)
+        let roll1 = Math.floor(Math.random() * 6) + 1
+        let roll2 = Math.floor(Math.random() * 6) + 1
+        let totalRoll = roll1 + roll2
+
         message.channel.send(
-          `${message.author.username} rolls... ${rolls[0]} + ${rolls[1]} = ${totalRoll}!`,
+          `${message.author.username} rolls... ${roll1} + ${roll2} = ${totalRoll}!`,
         )
         if (totalRoll > maxRoll) {
           maxRoll = totalRoll
